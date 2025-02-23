@@ -3,7 +3,7 @@
 		<!-- Header -->
 		<Header @search="handleSearch"></Header>
 
-		<!-- Loading State (Skeleton Loader) -->
+		<!-- Loading  -->
 		<v-row v-if="loading" justify="center">
 			<v-col
 				v-for="n in 8"
@@ -19,16 +19,21 @@
 		</v-row>
 
 		<!-- No Results Message -->
-		<v-row v-if="!error && noData" class="text-center">
+		<v-row
+			v-if="
+				!filteredGroupedShows || Object.keys(filteredGroupedShows).length === 0
+			"
+			class="text-center"
+		>
 			<v-col cols="12">
 				<h6>{{ noData }}</h6>
 			</v-col>
 		</v-row>
 
 		<!-- Error state -->
-		<v-row v-if="error" class="text-center">
+		<v-row v-if="error" class="err-msg">
 			<v-col cols="12">
-				<v-alert type="error">{{ error }}</v-alert>
+				<h6>{{ error }}</h6>
 			</v-col>
 		</v-row>
 
@@ -47,18 +52,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watchEffect } from "vue";
-import { fetchTvShows } from "../services/tvMazeApi"; // Import the API function
+import { fetchTvShows } from "../services/tvMazeApi";
 import GenreSection from "../components/GenreSection.vue";
 import Header from "../components/Header.vue";
 import { Show } from "../types/types";
 
-// Reactive references for TV shows, loading state, and errors
 const shows = ref<Show[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const noData = ref<string | null>(null);
-const groupedShows = ref<Record<string, Show[]>>({});
-const searchQuery = ref(""); // 🔍 Search query
+// const groupedShows = ref<Record<string, Show[]>>({});
+const searchQuery = ref("");
 
 // Fetch the data when the component is mounted
 onMounted(async () => {
@@ -74,83 +78,67 @@ onMounted(async () => {
 	}
 });
 
-watchEffect(() => {
-	if (!shows.value.length) {
-		console.warn("⚠️ No shows available to group!");
-		groupedShows.value = {};
-		return;
-	}
+const groupedShows = computed(() => {
+	if (!shows.value.length) return {}; // If no shows, return empty object
 
-	// const grouped: Record<string, Show[]> = {};
+	const grouped: Record<string, Show[]> = {};
 
-	// shows.value.forEach((show: Show) => {
-	// 	const genres = show.genres?.length ? show.genres : ["Uncategorized"];
-
-	// 	genres.forEach((genre: string) => {
-	// 		if (!grouped[genre]) grouped[genre] = [];
-	// 		grouped[genre].push(show);
-	// 	});
-	// });
-
-	groupedShows.value = shows.value.reduce((acc, show) => {
+	shows.value.forEach((show) => {
 		const genres = show.genres?.length ? show.genres : ["Uncategorized"];
 		genres.forEach((genre) => {
-			if (!acc[genre]) acc[genre] = [];
-			acc[genre].push(show);
+			if (!grouped[genre]) grouped[genre] = [];
+			grouped[genre].push(show);
 		});
-		return acc;
-	}, {} as Record<string, Show[]>);
-	// Sort each genre’s shows by rating
-	Object.values(groupedShows.value).forEach((showsList) =>
+	});
+
+	// Sort each genre's shows by rating (descending)
+	Object.values(grouped).forEach((showsList) =>
 		showsList.sort(
 			(a, b) => (b.rating?.average || 0) - (a.rating?.average || 0)
 		)
 	);
 
-	// Object.keys(grouped).forEach((genre: string) => {
-	// 	grouped[genre].sort(
-	// 		(a, b) => (b.rating?.average || 0) - (a.rating?.average || 0)
-	// 	);
-	// });
-
-	// groupedShows.value = grouped;
-	// console.log("✅ watchEffect Grouped Shows >>>", groupedShows.value);
+	return grouped;
 });
 
-//  Computed property to filter shows based on the search query
+// filter shows based on the search
 const filteredGroupedShows = computed(() => {
 	if (!searchQuery.value) return groupedShows.value;
 
 	const filtered: Record<string, Show[]> = {};
 	const addedShows = new Set<number>();
+	const lowerCaseQuery = searchQuery.value.toLowerCase();
 
-	Object.keys(groupedShows.value).forEach((genre: string) => {
-		const filteredShows = groupedShows.value[genre].filter((shows) => {
-			const showName = shows.name.toLowerCase();
-			const isInSearchQuery = showName.includes(
-				searchQuery.value.toLowerCase()
-			);
+	Object.entries(groupedShows.value).forEach(([genre, shows]) => {
+		const filteredShows = shows.filter((show) => {
+			const showName = show.name.toLowerCase();
+			const isInSearchQuery = showName.includes(lowerCaseQuery);
 
-			if (
-				showName.includes(searchQuery.value.toLowerCase()) &&
-				!addedShows.has(shows.id)
-			) {
-				addedShows.add(shows.id);
+			if (isInSearchQuery && !addedShows.has(show.id)) {
+				addedShows.add(show.id);
 				return true;
 			}
 			return false;
 		});
-		console.log("filter show>>>", filteredShows);
-		if (filteredShows.length === 0)
-			noData.value = "Sorry, no results found. Try a different keyword!";
-		console.log("NO data>>", noData.value, error.value);
-		if (filteredShows.length) filtered[genre] = filteredShows;
+
+		if (filteredShows.length) {
+			filtered[genre] = filteredShows;
+		}
 	});
+
+	// Update noData after filtering
+	error.value = Object.keys(filtered).length
+		? null
+		: "Sorry, no results found. Try a different keyword!";
+
 	return filtered;
 });
 
+console.log("filteredGroupedShows>>", filteredGroupedShows.value);
+
 // Update search query from Header
 const handleSearch = (query: string) => {
+	console.log("search>>", query);
 	searchQuery.value = query;
 };
 </script>
@@ -159,12 +147,17 @@ const handleSearch = (query: string) => {
 .main-container {
 	padding: 0;
 	max-width: 100%;
-	background-color: black;
-	color: white;
+	max-height: 100%;
+}
+
+.err-msg {
+	margin-top: 80px !important;
+	align-self: center;
+	margin-left: 20px;
 }
 
 .GenreSection {
-	margin-top: 80px;
+	margin-top: 50px;
 	padding: 0;
 }
 </style>

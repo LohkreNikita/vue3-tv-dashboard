@@ -1,6 +1,6 @@
 <template>
 	<v-container class="detail-sceen-container">
-		<!-- Loading State (Skeleton Loader) -->
+		<!-- Loading -->
 		<v-row v-if="loading" justify="center">
 			<v-col
 				v-for="n in 8"
@@ -47,14 +47,15 @@
 					<!-- Show Information -->
 					<v-col cols="12" sm="6" md="8" class="show-detail-info">
 						<v-chip color="yellow darken-3" class="text-body-1 mb-2">
-							⭐ {{ showDetails.rating?.average || "N/A" }}
+							<v-icon>mdi-star</v-icon>
+							{{ showDetails.rating?.average || "N/A" }}
 						</v-chip>
 
 						<v-chip color="blue darken-2" class="text-body-1 mb-2">
-							🎭 Genres: {{ showDetails.genres?.join(", ") || "N/A" }}
+							{{ showDetails.genres?.join(", ") || "N/A" }}
 						</v-chip>
 
-						<p class="text-body-1">⏳ Runtime: {{ showDetails.runtime }} min</p>
+						<p class="text-body-1">Runtime: {{ showDetails.runtime }} min</p>
 
 						<v-divider class="my-3"></v-divider>
 
@@ -110,17 +111,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.detail-sceen-container {
-	background-color: black;
-	color: white;
-	max-width: 100%;
-}
 .show-detail-container {
 	max-width: 1200px;
 	margin: 0 auto;
 }
 
-/* Image Styling */
 .show-image {
 	width: 100%;
 	max-height: 400px;
@@ -128,21 +123,7 @@ onMounted(async () => {
 	border-radius: 10px;
 }
 
-/* Summary text */
 .summary {
 	line-height: 1.6;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 600px) {
-	.show-detail-header {
-		flex-direction: column;
-		text-align: center;
-	}
-
-	.show-image {
-		width: 80%;
-		margin: 0 auto;
-	}
 }
 </style>

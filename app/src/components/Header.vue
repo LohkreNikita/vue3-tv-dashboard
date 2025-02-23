@@ -1,16 +1,15 @@
 <template>
 	<v-app-bar app color="black" elevate-on-scroll>
 		<v-container class="d-flex align-center justify-space-between">
-			<!-- Logo -->
 			<v-toolbar-title class="logo">TVVerse</v-toolbar-title>
 
-			<!-- Desktop Navigation (Hidden on Mobile) -->
+			<!-- (Hidden on Mobile) -->
 			<v-spacer />
 			<v-btn text class="nav-link d-none d-md-flex">Home</v-btn>
 			<v-btn text class="nav-link d-none d-md-flex">Trending</v-btn>
 			<v-btn text class="nav-link d-none d-md-flex">My List</v-btn>
 
-			<!-- SearchBar -->
+			<!-- searchBar  -->
 			<v-text-field
 				v-model="searchQuery"
 				append-inner-icon="mdi-magnify"
@@ -20,22 +19,37 @@
 				@update:model-value="emitSearch"
 			>
 			</v-text-field>
+
+			<!-- Theme Toggle Button -->
+			<v-btn icon @click="toggleTheme">
+				<v-icon>{{
+					isDark ? "mdi-weather-sunny" : "mdi-moon-waxing-crescent"
+				}}</v-icon>
+			</v-btn>
 		</v-container>
 	</v-app-bar>
 </template>
 
 <script setup lang="ts">
-import { ref, defineEmits } from "vue";
+import { ref, computed, defineEmits } from "vue";
+import { useTheme } from "vuetify";
 
+const theme = useTheme();
+const isDark = computed(() => theme.global.current.value.dark);
 const searchQuery = ref("");
-const emit = defineEmits<{ (event: "search", query: string): void }>();
+const emit = defineEmits(["search"]);
+
 const emitSearch = () => {
 	emit("search", searchQuery.value);
+};
+
+// Toggle theme mode
+const toggleTheme = () => {
+	theme.global.name.value = isDark.value ? "light" : "dark";
 };
 </script>
 
 <style scoped>
-/* Logo Styling */
 .logo {
 	font-size: 24px;
 	font-weight: bold;
@@ -43,7 +57,6 @@ const emitSearch = () => {
 	cursor: pointer;
 }
 
-/* Desktop Navigation */
 .nav-link {
 	color: white !important;
 	text-transform: none;
@@ -51,31 +64,9 @@ const emitSearch = () => {
 	margin: 0 10px;
 }
 
-/* Desktop Search Bar */
 .search-bar {
 	max-width: 300px;
 	width: "100%";
 	margin-left: 20px;
-}
-
-/* Mobile Search (Expands Below Header) */
-.mobile-search {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	right: 0;
-	margin: 0 16px;
-	z-index: 1000;
-}
-
-/* Responsive Styles */
-@media (max-width: 600px) {
-	.logo {
-		font-size: 18px;
-	}
-
-	.search-bar {
-		max-width: 100%;
-	}
 }
 </style>

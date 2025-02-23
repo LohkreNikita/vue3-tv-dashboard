@@ -11,6 +11,5 @@
 	text-align: center;
 	font-family: Avenir, Helvetica, Arial, sans-serif;
 	font-size: 16px;
-	background-color: red;
 }
 </style>

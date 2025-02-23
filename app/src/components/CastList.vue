@@ -20,7 +20,6 @@
 <script setup lang="ts">
 import { CastMember } from "../types/types";
 
-// ✅ Props with Type Safety
 const props = defineProps<{ cast: CastMember[] }>();
 </script>
 

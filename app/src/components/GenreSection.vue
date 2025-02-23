@@ -1,10 +1,6 @@
 <template>
 	<v-container class="gener-Container">
 		<h2 class="genre-title">{{ genre }}</h2>
-		<!-- Scroll Indicator -->
-		<v-icon v-if="showScrollIndicator" class="scroll-icon" size="28">
-			mdi-arrow-left-right
-		</v-icon>
 		<div class="scroll-container">
 			<v-row class="flex-nowrap">
 				<v-col v-for="show in shows" :key="show.id" cols="auto">
@@ -29,10 +25,12 @@ defineProps<{ genre: string; shows: Show[] }>();
 }
 .scroll-container {
 	overflow-x: auto;
+	overflow-y: hidden;
 	white-space: nowrap;
 	padding: 10px 0;
 	max-width: 100%;
 }
+
 .genre-title {
 	font-size: 22px;
 	font-weight: bold;
